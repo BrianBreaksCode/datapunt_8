@@ -14,22 +14,50 @@ def main() -> None:
                   wachtwoord=secrets.wachtwoord,
                   database=secrets.database)
 
-    # 1. Haal de eigenschappen op van een personeelslid (pas id aan indien nodig)
-    db.connect()
-    personeelslid_query = "SELECT * FROM personeelslid WHERE id = 1"
-    personeelslid = db.execute_query(personeelslid_query)
-    db.close()
+    BEVOEGDHEID_HIERARCHY = ['Senior', 'Medior', 'Junior', 'Stagiair']
 
-    # 2. Haal alle onderhoudstaken op
-    db.connect()
-    ondehoudstaken_query = "SELECT * FROM onderhoudstaak"
-    onderhoudstaken = db.execute_query(ondehoudstaken_query)
-    db.close()
+    # 1. Haal personeelsgegevens op
+    def get_personeelslid(db, personeels_id: int):
+        try:
+            db.connect()
+            personeelslid_query = (f"SELECT naam, werktijd, beroepstype, bevoegdheid, "
+                                   f"specialist_in_attracties, pauze_opsplitsen, "
+                                   f"leeftijd, verlaagde_fysieke_belasting "
+                                   f"FROM personeelslid WHERE id = {personeels_id}")
+            return db.execute_query(personeelslid_query)
+        finally:
+            db.close()
 
-    # Voorbeeld: print resultaten overzichtelijk
-    pprint.pp(personeelslid)
-    print(personeelslid[0]['naam'])
-    #pprint.pp(onderhoudstaken)
+    def transform_personeelslid(personeelslid_raw):
+        if not personeelslid_raw:
+            return None
+        personeelslid_processing = personeelslid_raw[0]
+        personeelslid_transformed = {
+            "naam": personeelslid_processing['naam'],
+            "werktijd": personeelslid_processing['werktijd'],
+            "beroepstype": personeelslid_processing['beroepstype'],
+            "bevoegdheid": personeelslid_processing['bevoegdheid'],
+            "specialist_in_attracties": personeelslid_processing['specialist_in_attracties'].split(',') if
+            personeelslid_processing['specialist_in_attracties'] else None,
+            "pauze_opsplitsen": bool(personeelslid_processing['pauze_opsplitsen']),
+            "max_fysieke_belasting": max_fysieke_belasting_berekenen(personeelslid_processing['leeftijd'],
+                                                                     personeelslid_processing[
+                                                                         'verlaagde_fysieke_belasting']),
+        }
+        return personeelslid_transformed
+
+    def max_fysieke_belasting_berekenen(personeel_leeftijd: int, arbo):
+        if arbo != 0:
+            return arbo
+        else:
+            if personeel_leeftijd < 25:
+                return 25
+            elif 25 <= personeel_leeftijd <= 51:
+                return 40
+            elif personeel_leeftijd >= 51:
+                return 20
+            else:
+                return 0
 
     # --- Bouw de dagtakenlijst dictionary ---
     dagtakenlijst = {
