@@ -5,6 +5,10 @@ import pprint
 from database_wrapper import Database
 import secrets
 
+
+#TODO: Implementeer functie
+#TODO: Taalconsistentie Nederlands + Engels -> English
+
 def main() -> None:
     # Database setup
     # Pas deze parameters aan voor je eigen database
@@ -59,21 +63,67 @@ def main() -> None:
             else:
                 return 0
 
+    # 2. Haal alle onderhoudstaken op
+    # FR6. Alleen onderhoudstaken toevoegen als:
+    # - beroepstype overeenkomt
+    # - personeelslid bevoegd is (of hogere bevoegdheid heeft)
+    # - fysieke belasting taak <= max van personeelslid
+
+    # FR7. Hogere bevoegdheden mogen ook lagere taken doen; hoogste bevoegdheid krijgt voorrang.
+
+    # FR8. Taken met hoge prioriteit (en specialistisch) eerst, daarna lage prioriteit.
+
+    def get_onderhoudstaken(db, personeelslid: dict):
+        try:
+            beroepstype = personeelslid['beroepstype']
+            # Determine the list of allowed bevoegdheden for this personeelslid
+            bevoegdheid = BEVOEGDHEID_HIERARCHY[BEVOEGDHEID_HIERARCHY.index(personeelslid['bevoegdheid']):]
+            # Build the SQL IN clause for bevoegdheid
+            bevoegdheid_in_clause = "('" + "', '".join(bevoegdheid) + "')"
+            specialisatie_in_clause = "('" + "', '".join(personeelslid['specialist_in_attracties']) + "')" \
+                if personeelslid['specialist_in_attracties'] else "('')"
+            # If specialist_in_attracties is None, use an empty list
+            specialist = personeelslid['specialist_in_attracties'] if personeelslid[
+                                                                          'specialist_in_attracties'] is not None else []
+            db.connect()
+            onderhoudstaken_query = (
+                f"SELECT * FROM onderhoudstaak"
+                f" WHERE beroepstype = '{beroepstype}'"
+                f" AND bevoegdheid in {bevoegdheid_in_clause}"
+                f" AND fysieke_belasting <= {personeelslid['max_fysieke_belasting']}"
+                f" ORDER BY case prioriteit when 'hoog' then 1 when 'laag' then 2 end, "
+                f" attractie in {specialisatie_in_clause}"
+            )
+            return db.execute_query(onderhoudstaken_query)
+        finally:
+            db.close()
+
+    def select_taak_combinatie_op_werktijd(onderhoudstaken, werktijd):
+        takenlijst = []
+        totale_duur = 0
+        for taak in onderhoudstaken:
+            if totale_duur + taak['duur'] < werktijd:
+                takenlijst.append(taak)
+                totale_duur += taak['duur']
+        print(f"{totale_duur}/{werktijd} minuten gevuld")
+        return takenlijst
+
     # --- Bouw de dagtakenlijst dictionary ---
     dagtakenlijst = {
         "personeelsgegevens": {
-            "naam": personeelslid[0]['naam'] # Vul aan met andere eigenschappen indien nodig
+            "naam": personeelslid[0]['naam']  # Vul aan met andere eigenschappen indien nodig
         },
         "weergegevens": {
             # Vul aan met weergegevens
         },
-        "dagtaken": [], # Hier komt een lijst met alle dagtaken
-        "totale_duur": 0 # Pas aan naar daadwerkelijke totale duur
+        "dagtaken": [],  # Hier komt een lijst met alle dagtaken
+        "totale_duur": 0  # Pas aan naar daadwerkelijke totale duur
     }
 
     # --- Schrijf de dictionary weg naar een JSON-bestand ---
     with open('dagtakenlijst_personeelslid_x.json', 'w') as json_bestand_uitvoer:
         json.dump(dagtakenlijst, json_bestand_uitvoer, indent=4)
+
 
 if __name__ == "__main__":
     main()
