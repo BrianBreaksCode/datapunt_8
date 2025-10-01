@@ -117,16 +117,16 @@ def main() -> None:
         pass
 
     # example dagtakenlijst bouwen
-    # dagtakenlijst = {
-    #     "personeelsgegevens": {
-    #         "naam": personeelslid[0]['naam']  # Vul aan met andere eigenschappen indien nodig
-    #     },
-    #     "weergegevens": {
-    #         # Vul aan met weergegevens
-    #     },
-    #     "dagtaken": [],  # Hier komt een lijst met alle dagtaken
-    #     "totale_duur": 0  # Pas aan naar daadwerkelijke totale duur
-    # }
+    dagtakenlijst = {
+        "personeelsgegevens": {
+            "naam": "Voorbeeld"
+        },
+        "weergegevens": {
+            # Vul aan met weergegevens
+        },
+        "dagtaken": [],  # Hier komt een lijst met alle dagtaken
+        "totale_duur": 0  # Pas aan naar daadwerkelijke totale duur
+    }
 
     # 5. Schrijf de dagtakenlijst naar een JSON-bestand
     #TODO: Implementeer functie
