@@ -108,22 +108,42 @@ def main() -> None:
         print(f"{totale_duur}/{werktijd} minuten gevuld")
         return takenlijst
 
-    # --- Bouw de dagtakenlijst dictionary ---
-    dagtakenlijst = {
-        "personeelsgegevens": {
-            "naam": personeelslid[0]['naam']  # Vul aan met andere eigenschappen indien nodig
-        },
-        "weergegevens": {
-            # Vul aan met weergegevens
-        },
-        "dagtaken": [],  # Hier komt een lijst met alle dagtaken
-        "totale_duur": 0  # Pas aan naar daadwerkelijke totale duur
-    }
+    # 3. Haal weergegevens op (optioneel)
+    #TODO: Implementeer functie
 
-    # --- Schrijf de dictionary weg naar een JSON-bestand ---
+    # 4. Bouw de dagtakenlijst dictionary
+    #TODO: Implementeer functie
+    def bouw_dagtakenlijst(personeelslid_processed, onderhoudstaken):
+        pass
+
+    # example dagtakenlijst bouwen
+    # dagtakenlijst = {
+    #     "personeelsgegevens": {
+    #         "naam": personeelslid[0]['naam']  # Vul aan met andere eigenschappen indien nodig
+    #     },
+    #     "weergegevens": {
+    #         # Vul aan met weergegevens
+    #     },
+    #     "dagtaken": [],  # Hier komt een lijst met alle dagtaken
+    #     "totale_duur": 0  # Pas aan naar daadwerkelijke totale duur
+    # }
+
+    # 5. Schrijf de dagtakenlijst naar een JSON-bestand
+    #TODO: Implementeer functie
     with open('dagtakenlijst_personeelslid_x.json', 'w') as json_bestand_uitvoer:
         json.dump(dagtakenlijst, json_bestand_uitvoer, indent=4)
 
+    # Print testing
+    personeels_id = 1  # Pas dit aan naar het gewenste personeelslid ID
+    personeelslid_raw = get_personeelslid(db, personeels_id)
+    personeelslid_processed = transform_personeelslid(personeelslid_raw)
+    # pprint.pp(personeelslid_processed)
 
+    onderhoudstaken_suitable = get_onderhoudstaken(db, personeelslid_processed)
+    # pprint.pp(onderhoudstaken_suitable)
+
+    onderhoudstaken_processed = select_taak_combinatie_op_werktijd(onderhoudstaken_suitable,
+                                                                   personeelslid_processed['werktijd'])
+    # pprint.pp(onderhoudstaken_processed)
 if __name__ == "__main__":
     main()
