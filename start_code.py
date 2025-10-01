@@ -1,63 +1,45 @@
-# import modulen
+# Imports
 from pathlib import Path
 import json
 import pprint
 from database_wrapper import Database
 
-
-# initialisatie
-
-# parameters voor connectie met de database
+# Database setup
+# Pas deze parameters aan voor je eigen database
+# (host, gebruiker, wachtwoord, database)
 db = Database(host="localhost", gebruiker="user", wachtwoord="password", database="attractiepark")
 
+# --- Haal gegevens op ---
 
-# main
-
-# Haal de eigenschappen op van een personeelslid
-# altijd verbinding openen om query's uit te voeren
+# 1. Haal de eigenschappen op van een personeelslid (pas id aan indien nodig)
 db.connect()
-
-# pas deze query aan om het juiste personeelslid te selecteren
-select_query = "SELECT * FROM personeelslid WHERE id = 1"
-personeelslid = db.execute_query(select_query)
-
-# altijd verbinding sluiten met de database als je klaar bent
+personeelslid_query = "SELECT * FROM personeelslid WHERE id = 1"
+personeelslid = db.execute_query(personeelslid_query)
 db.close()
 
-pprint.pp(personeelslid) # print de resultaten van de query op een overzichtelijke manier
-print(personeelslid[0]['naam']) # voorbeeld van hoe je bij een eigenschap komt
-
-
-
-# Haal alle onderhoudstaken op
-# altijd verbinding openen om query's uit te voeren
+# 2. Haal alle onderhoudstaken op
 db.connect()
-
-# pas deze query aan en voeg queries toe om de juiste onderhoudstaken op te halen
-select_query = "SELECT * FROM onderhoudstaak"
-onderhoudstaken = db.execute_query(select_query)
-
-# altijd verbinding sluiten met de database als je klaar bent
+ondehoudstaken_query = "SELECT * FROM onderhoudstaak"
+onderhoudstaken = db.execute_query(ondehoudstaken_query)
 db.close()
 
-#pprint.pp(onderhoudstaken) # print de resultaten van de query op een overzichtelijke manier
+# Voorbeeld: print resultaten overzichtelijk
+pprint.pp(personeelslid)
+print(personeelslid[0]['naam'])
+#pprint.pp(onderhoudstaken)
 
-
-
-# verzamel alle benodigde gegevens in een dictionary
+# --- Bouw de dagtakenlijst dictionary ---
 dagtakenlijst = {
-    "personeelsgegevens" : {
-        "naam": personeelslid[0]['naam'] # voorbeeld van hoe je bij een eigenschap komt
-        # STAP 1: vul aan met andere benodigde eigenschappen
+    "personeelsgegevens": {
+        "naam": personeelslid[0]['naam'] # Vul aan met andere eigenschappen indien nodig
     },
-    "weergegevens" : {
-        # STAP 4: vul aan met weergegevens
+    "weergegevens": {
+        # Vul aan met weergegevens
     },
-    "dagtaken": [] # STAP 2: hier komt een lijst met alle dagtaken
-    ,
-    "totale_duur": 0 # STAP 3: aanpassen naar daadwerkelijke totale duur
+    "dagtaken": [], # Hier komt een lijst met alle dagtaken
+    "totale_duur": 0 # Pas aan naar daadwerkelijke totale duur
 }
 
-# uiteindelijk schrijven we de dictionary weg naar een JSON-bestand, die kan worden ingelezen door de acceptatieomgeving
+# --- Schrijf de dictionary weg naar een JSON-bestand ---
 with open('dagtakenlijst_personeelslid_x.json', 'w') as json_bestand_uitvoer:
     json.dump(dagtakenlijst, json_bestand_uitvoer, indent=4)
