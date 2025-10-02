@@ -6,13 +6,12 @@ from database_wrapper import Database
 import secrets
 
 
-#TODO: Implementeer functie
 #TODO: Taalconsistentie Nederlands + Engels -> English
+#TODO: Docstrings toevoegen
+#TODO: Consider solving several 'shadows names from outer scope' warnings
 
 def main() -> None:
     # Database setup
-    # Pas deze parameters aan voor je eigen database
-    # (host, gebruiker, wachtwoord, database)
     db = Database(host=secrets.host,
                   gebruiker=secrets.gebruiker,
                   wachtwoord=secrets.wachtwoord,
@@ -99,51 +98,44 @@ def main() -> None:
             db.close()
 
     def select_taak_combinatie_op_werktijd(onderhoudstaken, werktijd):
+        #TODO: Find way to include totale_duur in return value
         takenlijst = []
         totale_duur = 0
         for taak in onderhoudstaken:
             if totale_duur + taak['duur'] < werktijd:
                 takenlijst.append(taak)
                 totale_duur += taak['duur']
-        print(f"{totale_duur}/{werktijd} minuten gevuld")
         return takenlijst
+
+    def get_totale_duur(takenlijst):
+        return sum(taak['duur'] for taak in takenlijst)
 
     # 3. Haal weergegevens op (optioneel)
     #TODO: Implementeer functie
 
     # 4. Bouw de dagtakenlijst dictionary
-    #TODO: Implementeer functie
-    def bouw_dagtakenlijst(personeelslid_processed, onderhoudstaken):
-        pass
-
-    # example dagtakenlijst bouwen
-    dagtakenlijst = {
-        "personeelsgegevens": {
-            "naam": "Voorbeeld"
-        },
-        "weergegevens": {
-            # Vul aan met weergegevens
-        },
-        "dagtaken": [],  # Hier komt een lijst met alle dagtaken
-        "totale_duur": 0  # Pas aan naar daadwerkelijke totale duur
-    }
+    def bouw_dagtakenlijst(personeelslid, takenlijst):
+        return {
+            "personeelsgegevens": personeelslid,
+            "weergegevens": {
+                #TODO: Vul aan met weergegevens
+                #   implementeer methode om weergegevens op te halen
+            },
+            "dagtaken": takenlijst,
+            "totale_duur": get_totale_duur(takenlijst)
+        }
 
     # 5. Schrijf de dagtakenlijst naar een JSON-bestand
-    #TODO: Implementeer functie
-    with open('dagtakenlijst_personeelslid_x.json', 'w') as json_bestand_uitvoer:
-        json.dump(dagtakenlijst, json_bestand_uitvoer, indent=4)
+    def write_dagtakenlijst_to_json(takenlijst, filename):
+        with open(filename, 'w') as json_bestand_uitvoer:
+            json.dump(takenlijst, json_bestand_uitvoer, indent=4)
 
-    # Print testing
-    personeels_id = 1  # Pas dit aan naar het gewenste personeelslid ID
-    personeelslid_raw = get_personeelslid(db, personeels_id)
-    personeelslid_processed = transform_personeelslid(personeelslid_raw)
-    # pprint.pp(personeelslid_processed)
+    personeelslid_raw = get_personeelslid(db, personeels_id=1)
+    personeelslid = transform_personeelslid(personeelslid_raw)
+    onderhoudstaken = get_onderhoudstaken(db, personeelslid)
+    takenlijst = select_taak_combinatie_op_werktijd(onderhoudstaken, personeelslid['werktijd'])
+    dagtakenlijst = bouw_dagtakenlijst(personeelslid, takenlijst)
+    write_dagtakenlijst_to_json(dagtakenlijst, 'dagtakenlijst_personeelslid_x.json')
 
-    onderhoudstaken_suitable = get_onderhoudstaken(db, personeelslid_processed)
-    # pprint.pp(onderhoudstaken_suitable)
-
-    onderhoudstaken_processed = select_taak_combinatie_op_werktijd(onderhoudstaken_suitable,
-                                                                   personeelslid_processed['werktijd'])
-    # pprint.pp(onderhoudstaken_processed)
 if __name__ == "__main__":
     main()
