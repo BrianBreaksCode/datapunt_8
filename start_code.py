@@ -91,7 +91,7 @@ def main() -> None:
                 f" AND bevoegdheid in {bevoegdheid_in_clause}"
                 f" AND fysieke_belasting <= {personeelslid['max_fysieke_belasting']}"
                 f" ORDER BY case prioriteit when 'hoog' then 1 when 'laag' then 2 end, "
-                f" attractie in {specialisatie_in_clause}"
+                f" attractie in {specialisatie_in_clause} DESC"
             )
             return db.execute_query(onderhoudstaken_query)
         finally:
@@ -120,6 +120,9 @@ def main() -> None:
             "weergegevens": {
                 #TODO: Vul aan met weergegevens
                 #   implementeer methode om weergegevens op te halen
+                "temperatuur": "20°C",
+                "neerslag": "0mm",
+                "wind": "5km/h"
             },
             "dagtaken": takenlijst,
             "totale_duur": get_totale_duur(takenlijst)
@@ -130,7 +133,7 @@ def main() -> None:
         with open(filename, 'w') as json_bestand_uitvoer:
             json.dump(takenlijst, json_bestand_uitvoer, indent=4)
 
-    personeelslid_raw = get_personeelslid(db, personeels_id=1)
+    personeelslid_raw = get_personeelslid(db, personeels_id=2)
     personeelslid = transform_personeelslid(personeelslid_raw)
     onderhoudstaken = get_onderhoudstaken(db, personeelslid)
     takenlijst = select_taak_combinatie_op_werktijd(onderhoudstaken, personeelslid['werktijd'])
