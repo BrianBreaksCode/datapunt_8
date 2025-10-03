@@ -81,11 +81,30 @@ def max_fysieke_belasting_berekenen(personeel_leeftijd: int, verlaagde_fysieke_b
 # FR8. Taken met hoge prioriteit (en specialistisch) eerst, daarna lage prioriteit.
 
 def get_onderhoudstaken(db, personeelslid: dict):
+    """Retrieve all maintenance tasks suitable for a given staff member based on their role, authority, and physical capacity.
+
+    Args:
+        db (Database): The database connection object.
+        personeelslid (dict): Dictionary containing staff member details, including 'beroepstype', 'bevoegdheid',
+            'specialist_in_attracties', and 'max_fysieke_belasting'.
+
+    Returns:
+        list: List of maintenance task dictionaries that match the staff member's qualifications and constraints.
+
+    Notes:
+        - Only tasks matching the staff member's role (beroepstype) are considered. (FR6)
+        - Staff can perform tasks at their authority level or below (bevoegdheid hierarchy). (FR6, FR7)
+        - Tasks are filtered by the staff member's maximum allowed physical workload. (FR6)
+        - Tasks are ordered by priority (high before low)
+            and whether the staff member is a specialist for the attraction. (FR8)
+    """
     try:
         beroepstype = personeelslid['beroepstype']
         # Determine the list of allowed bevoegdheden for this personeelslid
         bevoegdheid = BEVOEGDHEID_HIERARCHY[BEVOEGDHEID_HIERARCHY.index(personeelslid['bevoegdheid']):]
         # Build the SQL IN clause for bevoegdheid
+        # SQL expects values inside the in clause to be a specific way,
+        # and this is the best implementation I could piece together
         bevoegdheid_in_clause = "('" + "', '".join(bevoegdheid) + "')"
         specialisatie_in_clause = "('" + "', '".join(personeelslid['specialist_in_attracties']) + "')" \
             if personeelslid['specialist_in_attracties'] else "('')"
@@ -106,7 +125,22 @@ def get_onderhoudstaken(db, personeelslid: dict):
         db.close()
 
 def select_taak_combinatie_op_werktijd(onderhoudstaken, werktijd):
-    #TODO: Find way to include totale_duur in return value
+    """Select a combination of tasks that fit within the given working time.
+
+    This function iterates through a list of maintenance tasks (`onderhoudstaken`)
+    and selects tasks until the total duration of the selected tasks
+    (`totale_duur`) fits within the available working time (`werktijd`).
+
+    Args:
+        onderhoudstaken (list): A list of dictionaries, where each dictionary
+            represents a maintenance task and contains at least the key 'duur'
+            (duration of the task in minutes).
+        werktijd (int): The total available working time in minutes.
+
+    Returns:
+        list: A list of selected tasks (dictionaries) that fit within the
+        available working time.
+    """
     takenlijst = []
     totale_duur = 0
     for taak in onderhoudstaken:
@@ -147,3 +181,5 @@ onderhoudstaken = get_onderhoudstaken(db, personeelslid)
 takenlijst = select_taak_combinatie_op_werktijd(onderhoudstaken, personeelslid['werktijd'])
 dagtakenlijst = bouw_dagtakenlijst(personeelslid, takenlijst)
 write_dagtakenlijst_to_json(dagtakenlijst, 'dagtakenlijst_personeelslid_x.json')
+
+print(type(db))
