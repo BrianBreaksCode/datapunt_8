@@ -61,7 +61,7 @@ def max_fysieke_belasting_berekenen(personeel_leeftijd: int, verlaagde_fysieke_b
     if verlaagde_fysieke_belasting != 0:
         return verlaagde_fysieke_belasting
     else:
-        if personeel_leeftijd < 25:
+        if personeel_leeftijd <= 24:
             return 25
         elif 25 <= personeel_leeftijd <= 51:
             return 40
